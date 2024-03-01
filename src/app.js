@@ -6,11 +6,10 @@ import productsRouter from './routes/products.router.js'
 import cartsRouter from './routes/carts.router.js'
 import ProductManager from './class/ProductManager.js'
 import chatRouter from './routes/chat.router.js'
+import viewsRouter from './routes/views.router.js'
 import { chatModel } from './dao/models/chat.model.js'
 import { productModel } from './dao/models/product.model.js'
 import mongoose from 'mongoose'
-
-/* const productManager = new ProductManager('./src/data/products.json') */
 
 const port = 8080
 const app = express()
@@ -30,11 +29,12 @@ app.set('view engine', 'handlebars')
 app.use(express.static(__dirname + '/public'))
 
 //Routes
-app.use('/', productsRouter)
-app.use('/', cartsRouter)
-app.use('/', chatRouter)
+app.use('/api/products', productsRouter)
+app.use('/api/carts', cartsRouter)
+app.use('/chat', chatRouter)
+app.use('/', viewsRouter)
 
-//Connection DB
+
 mongoose.connect('mongodb+srv://nicolasesquilache:coderhouse@cluster0.f2gsvyw.mongodb.net/ecommerce?retryWrites=true&w=majority')
     .then(() => {
         console.log('Connected to the database')
@@ -43,16 +43,14 @@ mongoose.connect('mongodb+srv://nicolasesquilache:coderhouse@cluster0.f2gsvyw.mo
         console.log('Error connecting to database')
     })
 
-//Connection WS
 io.on('connection', (socket) => {
     console.log('User Connected')
 
     socket.on('message', async (data) => {
         try {
-            //Save the message in the database
             await chatModel.create({ email: data.email, message: data.message })
             const messages = await chatModel.find()
-            //Broadcast the message to all connecting clients
+
             io.emit('messageLogs', messages)
         } catch (error) {
             console.error('Error writing database')
@@ -60,10 +58,8 @@ io.on('connection', (socket) => {
     })
 
     socket.on('updateMessages', async () => {
-        //Send the messages that were already there when a new user connects
         const messages = await chatModel.find()
         io.emit('messageLogs', messages)
-        //Issue alert to all users except the one being connected
         socket.broadcast.emit('newUserConnected')
     })
 
@@ -79,7 +75,6 @@ io.on('connection', (socket) => {
         }
     }
 
-    //Logic for save
     socket.on('addProduct', async (newProductData) => {
         try {
             const result = await productModel.create(newProductData);
@@ -95,7 +90,6 @@ io.on('connection', (socket) => {
         }
     })
 
-    //Delete product
     socket.on('deleteProduct', async (id) => {
         try {
             let productState = await productModel.findByIdAndDelete(id)
@@ -106,7 +100,6 @@ io.on('connection', (socket) => {
                 socket.emit('deleteProduct', 'Not found')
             }
         } catch (error) {
-            //Verify CastError
             if (error instanceof mongoose.CastError) {
                 socket.emit('deleteProduct', 'Error: ID Product not valid');
             } else {

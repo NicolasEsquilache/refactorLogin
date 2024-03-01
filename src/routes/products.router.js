@@ -3,27 +3,7 @@ import { productModel } from "../dao/models/product.model.js";
 
 const productsRouter = Router();
 
-// Render on front with handlebars with IO
 productsRouter.get('/', async (req, res) => {
-    try {
-        const allProducts = await productModel.find({}, { _id: 0, __v: 0 }).lean();
-        res.render('home', {
-            style: '/css/styles.css',
-            title: "All Products",
-            allProducts
-        });
-    } catch (error) {
-        res.status(500).send('Internal server Error', error);
-    }
-});
-
-// Render products in real time with ws
-productsRouter.get('/realtimeproducts', async (req, res) => {
-    res.render('realTimeProducts', { style: '/css/styles.css' });
-});
-
-// Get all products or with limit
-productsRouter.get('/api/products', async (req, res) => {
     const { limit = 3, page = 1, category, availability, sort } = req.query;
     try {
         const options = {
@@ -31,8 +11,7 @@ productsRouter.get('/api/products', async (req, res) => {
             page: parseInt(page),
             lean: true
         };
-        
-        // Construir objeto de filtro basado en la categoría y disponibilidad
+
         const filter = {};
         if (category) {
             filter.category = category;
@@ -41,16 +20,13 @@ productsRouter.get('/api/products', async (req, res) => {
             filter.stock = availability === 'available' ? { $gt: 0 } : { $eq: 0 };
         }
 
-        // Construir objeto de opciones de ordenamiento
         const sortOptions = {};
         if (sort === '1' || sort === '-1') {
             sortOptions.price = parseInt(sort); // Ordenar por precio ascendente (1) o descendente (-1)
         }
 
-        // Realizar la consulta a la base de datos con las opciones configuradas
         const products = await productModel.paginate(filter, { ...options, sort: sortOptions });
-        
-        // Generar enlaces de paginación
+
         const prevLink = products.hasPrevPage ? `/api/products?page=${products.prevPage}` : null;
         const nextLink = products.hasNextPage ? `/api/products?page=${products.nextPage}` : null;
         const response = {
@@ -66,16 +42,13 @@ productsRouter.get('/api/products', async (req, res) => {
             nextLink: nextLink
         };
 
-        res.status(200).send(response);
+        res.status(200).send({ result: 'Success', message: response });
     } catch (error) {
         res.status(400).send({ status: 'error', payload: [], message: error.message });
     }
 });
 
-
-
-// See product by ID
-productsRouter.get('/api/products/:id', async (req, res) => {
+productsRouter.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const product = await productModel.findById(id);
@@ -86,8 +59,7 @@ productsRouter.get('/api/products/:id', async (req, res) => {
     }
 });
 
-// Add new product
-productsRouter.post('/api/products', async (req, res) => {
+productsRouter.post('/', async (req, res) => {
     const { title, description, price, thumbnails, code, stock, category } = req.body;
     try {
         const prod = await productModel.create({ title, description, price, thumbnails, code, stock, category });
@@ -97,8 +69,7 @@ productsRouter.post('/api/products', async (req, res) => {
     }
 });
 
-// Update product
-productsRouter.put('/api/products/:id', async (req, res) => {
+productsRouter.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { title, description, price, thumbnails, code, stock, status, category } = req.body;
     try {
@@ -110,8 +81,7 @@ productsRouter.put('/api/products/:id', async (req, res) => {
     }
 });
 
-// Delete product
-productsRouter.delete('/api/products/:id', async (req, res) => {
+productsRouter.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const product = await productModel.findByIdAndDelete(id);

@@ -2,7 +2,7 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/chat', (req, res) => {
+router.get('/', (req, res) => {
     res.render('chat', { style: '/css/styles.css' });
 });
 

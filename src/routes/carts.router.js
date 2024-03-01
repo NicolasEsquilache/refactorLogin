@@ -4,7 +4,7 @@ import { productModel } from '../dao/models/product.model.js';
 
 const cartsRouter = Router();
 
-cartsRouter.post('/api/carts', async (req, res) => {
+cartsRouter.post('/', async (req, res) => {
     try {
         const cart = await cartModel.create({ products: [] });
         res.status(201).send({ result: 'Success', message: cart });
@@ -13,7 +13,7 @@ cartsRouter.post('/api/carts', async (req, res) => {
     }
 });
 
-cartsRouter.get('/api/carts/:cid', async (req, res) => {
+cartsRouter.get('/:cid', async (req, res) => {
     const { cid } = req.params;
     try {
         const cart = await cartModel.findById(cid).populate('products.product');
@@ -26,7 +26,7 @@ cartsRouter.get('/api/carts/:cid', async (req, res) => {
     }
 });
 
-cartsRouter.post('/api/carts/:cid/product/:pid', async (req, res) => {
+cartsRouter.post('/:cid/product/:pid', async (req, res) => {
     const { cid, pid } = req.params;
     const { quantity = 1 } = req.body;
 
@@ -50,7 +50,7 @@ cartsRouter.post('/api/carts/:cid/product/:pid', async (req, res) => {
     }
 });
 
-cartsRouter.delete('/api/carts/:cid/product/:pid', async (req, res) => {
+cartsRouter.delete('/:cid/product/:pid', async (req, res) => {
     const { cid, pid } = req.params;
 
     try {
@@ -76,9 +76,9 @@ cartsRouter.delete('/api/carts/:cid/product/:pid', async (req, res) => {
     }
 });
 
-cartsRouter.put('/api/carts/:cid', async (req, res) => {
+cartsRouter.put('/:cid', async (req, res) => {
     const { cid } = req.params;
-    console.log(req.body); 
+    console.log(req.body);
     try {
         const cart = await cartModel.findById(cid);
 
@@ -96,7 +96,7 @@ cartsRouter.put('/api/carts/:cid', async (req, res) => {
     }
 });
 
-cartsRouter.put('/api/carts/:cid/product/:pid', async (req, res) => {
+cartsRouter.put('/:cid/product/:pid', async (req, res) => {
     const { cid, pid } = req.params;
     const { quantity } = req.body;
 
@@ -123,7 +123,7 @@ cartsRouter.put('/api/carts/:cid/product/:pid', async (req, res) => {
     }
 });
 
-cartsRouter.delete('/api/carts/:cid', async (req, res) => {
+cartsRouter.delete('/:cid', async (req, res) => {
     const { cid } = req.params;
 
     try {
@@ -133,7 +133,7 @@ cartsRouter.delete('/api/carts/:cid', async (req, res) => {
             return res.status(404).send({ result: 'Error', message: 'Cart not found' });
         }
 
-        cart.products = []; 
+        cart.products = [];
 
         await cart.save();
 
