@@ -7,7 +7,7 @@ import cartsRouter from './routes/carts.router.js'
 import ProductManager from './class/ProductManager.js'
 import chatRouter from './routes/chat.router.js'
 import { chatModel } from './dao/models/chat.model.js'
-import { productModel } from './dao/models/product.model.js'
+import  productModel  from './dao/models/product.model.js'
 import mongoose from 'mongoose'
 
 /* const productManager = new ProductManager('./src/data/products.json') */

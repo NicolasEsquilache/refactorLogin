@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { productModel } from "../dao/models/product.model.js";
+import productModel from "../dao/models/product.model.js";
 
 const productsRouter = Router();
 
@@ -24,14 +24,55 @@ productsRouter.get('/realtimeproducts', async (req, res) => {
 
 // Get all products or with limit
 productsRouter.get('/api/products', async (req, res) => {
-    const { limit } = req.query;
+    const { limit = 3, page = 1, category, availability, sort } = req.query;
     try {
-        const products = await productModel.find().limit(limit);
-        res.status(200).send({ result: 'Success', message: products });
+        const options = {
+            limit: parseInt(limit),
+            page: parseInt(page),
+            lean: true
+        };
+        
+        // Construir objeto de filtro basado en la categoría y disponibilidad
+        const filter = {};
+        if (category) {
+            filter.category = category;
+        }
+        if (availability) {
+            filter.stock = availability === 'available' ? { $gt: 0 } : { $eq: 0 };
+        }
+
+        // Construir objeto de opciones de ordenamiento
+        const sortOptions = {};
+        if (sort === '1' || sort === '-1') {
+            sortOptions.price = parseInt(sort); // Ordenar por precio ascendente (1) o descendente (-1)
+        }
+
+        // Realizar la consulta a la base de datos con las opciones configuradas
+        const products = await productModel.paginate(filter, { ...options, sort: sortOptions });
+        
+        // Generar enlaces de paginación
+        const prevLink = products.hasPrevPage ? `/api/products?page=${products.prevPage}` : null;
+        const nextLink = products.hasNextPage ? `/api/products?page=${products.nextPage}` : null;
+        const response = {
+            status: 'success',
+            payload: products.docs,
+            totalPages: products.totalPages,
+            prevPage: products.prevPage,
+            nextPage: products.nextPage,
+            page: products.page,
+            hasPrevPage: products.hasPrevPage,
+            hasNextPage: products.hasNextPage,
+            prevLink: prevLink,
+            nextLink: nextLink
+        };
+
+        res.status(200).send(response);
     } catch (error) {
-        res.status(400).send({ response: 'Error read db', message: error });
+        res.status(400).send({ status: 'error', payload: [], message: error.message });
     }
 });
+
+
 
 // See product by ID
 productsRouter.get('/api/products/:id', async (req, res) => {

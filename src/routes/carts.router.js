@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { cartModel } from '../dao/models/cart.model.js';
-import { productModel } from '../dao/models/product.model.js';
+import  productModel from '../dao/models/product.model.js';
 
 const cartsRouter = Router();
 
@@ -16,7 +16,7 @@ cartsRouter.post('/api/carts', async (req, res) => {
 cartsRouter.get('/api/carts/:cid', async (req, res) => {
     const { cid } = req.params;
     try {
-        const cart = await cartModel.findById(cid);
+        const cart = await cartModel.findById(cid).populate('products.product');
         if (!cart) {
             return res.status(404).send({ result: 'Error', message: 'Cart not found' });
         }
@@ -28,7 +28,8 @@ cartsRouter.get('/api/carts/:cid', async (req, res) => {
 
 cartsRouter.post('/api/carts/:cid/product/:pid', async (req, res) => {
     const { cid, pid } = req.params;
-    const { quantity } = req.body;
+    const { quantity = 1 } = req.body;
+
     try {
         const cart = await cartModel.findById(cid);
         const product = await productModel.findById(pid);
