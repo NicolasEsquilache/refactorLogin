@@ -17,8 +17,17 @@ router.post("/login", passport.authenticate('login', { failureRedirect: '/faillo
         age: req.user.age,
         email: req.user.email
     }
-    res.send({ status: "success", payload: req.user })
+    //res.send({ status: "success", payload: req.user })   
+    res.redirect('/login')
 });
+
+router.get("/github", passport.authenticate('github', { scope: ['user:email'] }), async (req, res) => { })
+
+router.get("/githubcallback", passport.authenticate('github', { failureRedirect: '/login' }), async (req, res) => {
+    req.session.user = req.user
+    //res.send('You are logged in successfully with Github!')
+    res.redirect('/login')
+})
 
 //Restore password
 router.post('/restore', async (req, res) => {
